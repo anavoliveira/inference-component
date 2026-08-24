@@ -18,8 +18,6 @@ resource "awscc_sagemaker_inference_component" "iris" {
 
   tags = [for k, v in var.tags : { key = k, value = v }]
 
-  depends_on = [aws_vpc_endpoint.s3, aws_vpc_endpoint.ecr_api, aws_vpc_endpoint.ecr_dkr]
-
   lifecycle {
     # Application Auto Scaling manages DesiredCopyCount after creation; avoid
     # fighting it on subsequent `terraform apply` runs.
