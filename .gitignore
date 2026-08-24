@@ -1,0 +1,20 @@
+# Terraform
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/tfplan
+terraform/*.tfvars
+terraform/schema.json
+
+# Python / training artifacts
+train/.venv/
+train/model/
+train/package/
+train/model.tar.gz
+train/invoke-payload.json
+train/invoke-response.json
+__pycache__/
+*.pyc
+
+# Local tooling
+.claude/

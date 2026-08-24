@@ -1,0 +1,19 @@
+# Copy to terraform.tfvars and fill in with real values before `terraform apply`.
+
+aws_region  = "us-east-1"
+aws_profile = "default"
+
+vpc_id              = "vpc-xxxxxxxxxxxxxxxxx"
+subnet_ids          = ["subnet-xxxxxxxxxxxxxxxxx", "subnet-yyyyyyyyyyyyyyyyy"]
+security_group_ids  = ["sg-xxxxxxxxxxxxxxxxx"]
+
+model_data_url            = "s3://my-bucket/iris/model.tar.gz"
+model_artifact_bucket_arn = "arn:aws:s3:::my-bucket"
+
+# Build and push ../container/ to the aws_ecr_repository.iris_ic repo this
+# stack creates before applying - see variables.tf for the exact commands.
+container_image_tag = "latest"
+
+tags = {
+  project = "iris-ic"
+}
