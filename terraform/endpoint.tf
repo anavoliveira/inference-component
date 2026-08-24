@@ -93,6 +93,8 @@ resource "terraform_data" "endpoint_config" {
 # applies to production_variants in the endpoint configuration), so it works
 # natively here.
 resource "aws_sagemaker_endpoint" "this" {
+  provider = aws.provider-lotus
+
   name                 = local.endpoint_name
   endpoint_config_name = local.endpoint_config_name
 

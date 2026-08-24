@@ -1,13 +1,15 @@
 # Root wrapper for standalone/local testing of ../../terraform (the flavor
-# module). Mirrors the real platform root's provider pattern - a default aws
-# provider plus an aliased "provider-datamesh" one (normally assume-role'd
-# into a separate account for flavor_params.data_mesh resources).
+# module). Mirrors the real platform root (esteira/version.tf): two aliased
+# aws providers (provider-lotus, provider-datamesh - normally assume-role'd
+# into a separate account for flavor_params.data_mesh resources) and a plain
+# default awscc provider (no alias).
 #
 # This test account has no real cross-account datamesh role, so
 # provider-datamesh just reuses the same credentials here - only relevant
 # once data_mesh resources are actually implemented in the module.
 
 provider "aws" {
+  alias   = "provider-lotus"
   region  = var.aws_region
   profile = var.aws_profile != "" ? var.aws_profile : null
 }
@@ -27,7 +29,7 @@ module "inference_component" {
   source = "../../terraform"
 
   providers = {
-    aws                   = aws
+    aws.provider-lotus    = aws.provider-lotus
     aws.provider-datamesh = aws.provider-datamesh
     awscc                 = awscc
   }

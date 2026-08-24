@@ -1,4 +1,6 @@
 resource "aws_appautoscaling_target" "this" {
+  provider = aws.provider-lotus
+
   service_namespace  = "sagemaker"
   resource_id        = "inference-component/${awscc_sagemaker_inference_component.this.inference_component_name}"
   scalable_dimension = "sagemaker:inference-component:DesiredCopyCount"
@@ -9,6 +11,8 @@ resource "aws_appautoscaling_target" "this" {
 }
 
 resource "aws_appautoscaling_policy" "this" {
+  provider = aws.provider-lotus
+
   name               = "${var.model_name}-target-tracking"
   policy_type        = "TargetTrackingScaling"
   service_namespace  = aws_appautoscaling_target.this.service_namespace

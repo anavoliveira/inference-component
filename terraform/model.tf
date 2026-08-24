@@ -1,4 +1,6 @@
 resource "aws_sagemaker_model" "this" {
+  provider = aws.provider-lotus
+
   name               = var.model_name
   execution_role_arn = local.execution_role_arn
 
