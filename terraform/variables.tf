@@ -45,22 +45,17 @@ variable "model_artifact_bucket_arn" {
   type        = string
 }
 
-variable "ecr_repository_name" {
+variable "container_image_uri" {
   description = <<-EOT
-    Name of the existing ECR repository holding the custom inference image
-    (see ../container/) - this stack only references it (data source in
-    ecr.tf), it does not create or manage the repository or its images.
-    Build and push happen outside this stack, e.g.:
+    Full URI (including tag) of the existing custom inference image (see
+    ../container/), e.g.
+    123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repo:latest.
+    This stack does not build, push, or otherwise manage the image or its
+    ECR repository - that happens outside this stack, e.g.:
       docker build --platform linux/amd64 --provenance=false --sbom=false \
-        -t <account>.dkr.ecr.<region>.amazonaws.com/<repo-name>:<tag> --push ../container
+        -t <image-uri> --push ../container
   EOT
   type        = string
-}
-
-variable "container_image_tag" {
-  description = "Tag of the image (in var.ecr_repository_name) to deploy."
-  type        = string
-  default     = "latest"
 }
 
 # --- Endpoint / Inference Component ------------------------------------------

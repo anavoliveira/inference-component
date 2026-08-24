@@ -10,11 +10,10 @@ security_group_ids  = ["sg-xxxxxxxxxxxxxxxxx"]
 model_data_url            = "s3://my-bucket/iris/model.tar.gz"
 model_artifact_bucket_arn = "arn:aws:s3:::my-bucket"
 
-# This stack only references an existing ECR repo/image (data source in
-# ecr.tf) - build and push ../container/ to it yourself before applying,
-# see variables.tf for the exact commands.
-ecr_repository_name = "my-existing-repo"
-container_image_tag = "latest"
+# This stack doesn't manage the image - build and push ../container/ to an
+# existing ECR repo yourself before applying, see variables.tf for the
+# exact commands, then paste the full image URI (with tag) here.
+container_image_uri = "123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repo:latest"
 
 tags = {
   project = "iris-ic"

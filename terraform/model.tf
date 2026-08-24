@@ -3,13 +3,12 @@ resource "aws_sagemaker_model" "iris" {
   execution_role_arn = aws_iam_role.sagemaker_execution.arn
 
   primary_container {
-    # Custom image (not an AWS-managed framework container) - see ecr.tf. Avoids
-    # the AWS-managed sklearn container's "pip install ." step at container
-    # startup, which needs PyPI access unavailable from these VPC subnets
-    # (no NAT gateway). Everything is baked in at build time instead. The
-    # image itself is built and pushed to the existing repo outside this
-    # stack (data.aws_ecr_repository.iris_ic references it, doesn't create it).
-    image          = "${data.aws_ecr_repository.iris_ic.repository_url}:${var.container_image_tag}"
+    # Custom image (not an AWS-managed framework container) - see ../container/.
+    # Avoids the AWS-managed sklearn container's "pip install ." step at
+    # container startup, which needs PyPI access unavailable from these VPC
+    # subnets (no NAT gateway). Everything is baked in at build time instead.
+    # Built and pushed to an existing ECR repo outside this stack.
+    image          = var.container_image_uri
     model_data_url = var.model_data_url
   }
 
