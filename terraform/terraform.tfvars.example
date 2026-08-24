@@ -1,7 +1,10 @@
 # Copy to terraform.tfvars and fill in with real values before `terraform apply`.
 
-aws_region  = "us-east-1"
-aws_profile = "default"
+aws_region = "us-east-1"
+# aws_profile defaults to "" (no profile - credentials from the environment,
+# e.g. a GitHub Actions job authenticated via aws-actions/configure-aws-credentials).
+# Only set this for local runs with a named AWS CLI profile.
+# aws_profile = "default"
 
 project_role = "itau-mlops-sagemakerstudio-user-execution-role"
 model_name   = "iris-ic"

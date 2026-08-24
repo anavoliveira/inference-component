@@ -5,9 +5,17 @@ variable "aws_region" {
 }
 
 variable "aws_profile" {
-  description = "AWS CLI profile used by the provider. Provider-level plumbing, not part of flavor_params."
+  description = <<-EOT
+    Named AWS CLI profile used by the provider and the aws CLI calls in
+    endpoint.tf. Leave as "" (the default) when credentials come from the
+    environment instead - e.g. a GitHub Actions job authenticated via
+    aws-actions/configure-aws-credentials (OIDC or static keys exported as
+    AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY/AWS_SESSION_TOKEN) - in which
+    case no profile is passed anywhere and the default credential chain is
+    used instead.
+  EOT
   type        = string
-  default     = "default"
+  default     = ""
 }
 
 variable "project_role" {

@@ -59,13 +59,14 @@ resource "terraform_data" "endpoint_config" {
       $utf8NoBom = New-Object System.Text.UTF8Encoding $false
       [System.IO.File]::WriteAllText($tmp, $env:PRODUCTION_VARIANTS_JSON, $utf8NoBom)
       [System.IO.File]::WriteAllText($vpcTmp, $env:VPC_CONFIG_JSON, $utf8NoBom)
+      $profileArgs = if ("${self.input.profile}") { @("--profile", "${self.input.profile}") } else { @() }
       aws sagemaker create-endpoint-config `
         --endpoint-config-name "${self.input.name}" `
         --production-variants "file://$tmp" `
         --execution-role-arn "${self.input.role_arn}" `
         --vpc-config "file://$vpcTmp" `
         --region "${self.input.region}" `
-        --profile "${self.input.profile}"
+        @profileArgs
       $exit = $LASTEXITCODE
       Remove-Item $tmp, $vpcTmp
       exit $exit
@@ -76,10 +77,11 @@ resource "terraform_data" "endpoint_config" {
     when        = destroy
     interpreter = ["PowerShell", "-NoProfile", "-Command"]
     command     = <<-EOT
+      $profileArgs = if ("${self.input.profile}") { @("--profile", "${self.input.profile}") } else { @() }
       aws sagemaker delete-endpoint-config `
         --endpoint-config-name "${self.input.name}" `
         --region "${self.input.region}" `
-        --profile "${self.input.profile}"
+        @profileArgs
     EOT
   }
 }
