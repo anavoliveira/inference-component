@@ -1,7 +1,3 @@
-locals {
-  endpoint_config_name = "${var.project_name}-endpoint-config"
-}
-
 # hashicorp/aws still requires `model_name` on production_variants
 # (terraform-provider-aws#40644, open) and hashicorp/awscc has no
 # awscc_sagemaker_endpoint_config resource at all. Inference-component-only
@@ -13,17 +9,18 @@ resource "terraform_data" "endpoint_config" {
     name     = local.endpoint_config_name
     region   = var.aws_region
     profile  = var.aws_profile
-    role_arn = aws_iam_role.sagemaker_execution.arn
+    role_arn = local.execution_role_arn
   }
 
   triggers_replace = [
     local.endpoint_config_name,
-    var.variant_name,
-    var.instance_type,
-    var.max_instance_count,
-    aws_iam_role.sagemaker_execution.arn,
-    join(",", var.subnet_ids),
-    join(",", var.security_group_ids),
+    var.flavor_params.instance_type,
+    var.flavor_params.initial_instance_count,
+    var.flavor_params.volume_size_in_gb,
+    var.flavor_params.autoscaling.max_capacity,
+    local.execution_role_arn,
+    join(",", var.flavor_params.network.subnet_ids),
+    data.aws_security_group.default.id,
   ]
 
   provisioner "local-exec" {
@@ -31,23 +28,29 @@ resource "terraform_data" "endpoint_config" {
     environment = {
       PRODUCTION_VARIANTS_JSON = jsonencode([
         {
-          VariantName          = var.variant_name
-          InstanceType         = var.instance_type
-          InitialInstanceCount = 1
+          VariantName          = local.variant_name
+          InstanceType         = var.flavor_params.instance_type
+          InitialInstanceCount = var.flavor_params.initial_instance_count
+          VolumeSizeInGB       = var.flavor_params.volume_size_in_gb
           ManagedInstanceScaling = {
             Status           = "ENABLED"
             MinInstanceCount = 0
-            MaxInstanceCount = var.max_instance_count
+            # SageMaker's ManagedInstanceScaling has no direct equivalent to
+            # flavor_params.autoscaling.max_capacity (that's the inference
+            # component's DesiredCopyCount ceiling, a different dimension) -
+            # reused here as the instance-count ceiling too, since
+            # flavor_params has no dedicated field for it.
+            MaxInstanceCount = var.flavor_params.autoscaling.max_capacity
           }
         }
       ])
       # Must match aws_sagemaker_model's vpc_config exactly - AWS's Vpc consistency
       # check is order-sensitive, and vpc_config.subnets is a set in the aws provider
       # schema (normalized/sorted), so read it back from the model instead of
-      # reusing var.subnet_ids directly.
+      # reusing var.flavor_params.network.subnet_ids directly.
       VPC_CONFIG_JSON = jsonencode({
-        Subnets          = aws_sagemaker_model.iris.vpc_config[0].subnets
-        SecurityGroupIds = aws_sagemaker_model.iris.vpc_config[0].security_group_ids
+        Subnets          = aws_sagemaker_model.this.vpc_config[0].subnets
+        SecurityGroupIds = aws_sagemaker_model.this.vpc_config[0].security_group_ids
       })
     }
     command = <<-EOT
@@ -87,11 +90,11 @@ resource "terraform_data" "endpoint_config" {
 # schema. aws_sagemaker_endpoint has no model_name constraint (that only
 # applies to production_variants in the endpoint configuration), so it works
 # natively here.
-resource "aws_sagemaker_endpoint" "iris" {
-  name                 = var.endpoint_name
+resource "aws_sagemaker_endpoint" "this" {
+  name                 = local.endpoint_name
   endpoint_config_name = local.endpoint_config_name
 
-  tags = var.tags
+  tags = local.tags
 
   depends_on = [terraform_data.endpoint_config]
 }

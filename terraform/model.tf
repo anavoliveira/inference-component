@@ -1,6 +1,6 @@
-resource "aws_sagemaker_model" "iris" {
-  name               = "${var.project_name}-model"
-  execution_role_arn = aws_iam_role.sagemaker_execution.arn
+resource "aws_sagemaker_model" "this" {
+  name               = var.model_name
+  execution_role_arn = local.execution_role_arn
 
   primary_container {
     # Custom image (not an AWS-managed framework container) - see ../container/.
@@ -8,14 +8,15 @@ resource "aws_sagemaker_model" "iris" {
     # container startup, which needs PyPI access unavailable from these VPC
     # subnets (no NAT gateway). Everything is baked in at build time instead.
     # Built and pushed to an existing ECR repo outside this stack.
-    image          = var.container_image_uri
-    model_data_url = var.model_data_url
+    image          = var.flavor_params.image_uri
+    model_data_url = local.model_data_url
+    environment    = var.flavor_params.inference_environment
   }
 
   vpc_config {
-    subnets            = var.subnet_ids
-    security_group_ids = var.security_group_ids
+    subnets            = var.flavor_params.network.subnet_ids
+    security_group_ids = [data.aws_security_group.default.id]
   }
 
-  tags = var.tags
+  tags = local.tags
 }

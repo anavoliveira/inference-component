@@ -1,145 +1,127 @@
 variable "aws_region" {
-  description = "AWS region to deploy into."
+  description = "AWS region to deploy into. Provider-level plumbing, not part of flavor_params."
   type        = string
   default     = "us-east-1"
 }
 
 variable "aws_profile" {
-  description = "AWS CLI profile used by the provider."
+  description = "AWS CLI profile used by the provider. Provider-level plumbing, not part of flavor_params."
   type        = string
   default     = "default"
 }
 
-variable "project_name" {
-  description = "Prefix used to name every resource created by this stack."
+variable "project_role" {
+  description = "Name of the existing SageMaker execution role (not created by this stack)."
   type        = string
-  default     = "iris-ic"
+  default     = "itau-mlops-sagemakerstudio-user-execution-role"
 }
 
-# --- Networking (existing VPC) ---------------------------------------------
-
-variable "vpc_id" {
-  description = "ID of the existing VPC the endpoint's model will attach to."
+variable "model_name" {
+  description = "Nome do projeto"
   type        = string
 }
 
-variable "subnet_ids" {
-  description = "Subnet IDs (existing VPC) used in the SageMaker model's VpcConfig."
-  type        = list(string)
-}
+variable "flavor_params" {
+  description = "Consolidated flavor parameters"
+  type = object({
+    project = object({
+      model_name          = string
+      experiment_id       = string
+      id_mrm              = string
+      condominio          = string
+      tech_team_email     = string
+      owner_contact_email = string
+    })
 
-variable "security_group_ids" {
-  description = "Security group IDs (existing VPC) used in the SageMaker model's VpcConfig."
-  type        = list(string)
-}
+    network = object({
+      vpc_id     = string
+      subnet_ids = list(string)
+    })
 
-# --- Model artifact ----------------------------------------------------------
+    model = object({
+      model_path      = string
+      model_file_name = string
+      s3_bucket       = string
+    })
 
-variable "model_data_url" {
-  description = "S3 URI of the packaged model artifact (model.tar.gz), e.g. s3://my-bucket/iris/model.tar.gz."
-  type        = string
-}
+    image_uri              = string
+    inference_environment  = optional(map(string), {})
+    instance_type          = string
+    initial_instance_count = optional(number, 1)
+    volume_size_in_gb      = optional(number, 30)
 
-variable "model_artifact_bucket_arn" {
-  description = "ARN of the S3 bucket holding the model artifact, used to scope the execution role's S3 permissions."
-  type        = string
-}
+    data_capture = optional(object({
+      mode       = optional(string, "InputAndOutput")
+      percentage = optional(number, 100)
+    }))
 
-variable "container_image_uri" {
-  description = <<-EOT
-    Full URI (including tag) of the existing custom inference image (see
-    ../container/), e.g.
-    123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repo:latest.
-    This stack does not build, push, or otherwise manage the image or its
-    ECR repository - that happens outside this stack, e.g.:
-      docker build --platform linux/amd64 --provenance=false --sbom=false \
-        -t <image-uri> --push ../container
-  EOT
-  type        = string
-}
+    autoscaling = optional(object({
+      min_capacity                         = number
+      max_capacity                         = number
+      max_requests_per_minute_per_instance = number
+      scale_in_cooldown_secs               = optional(number, 600)
+      scale_out_cooldown_secs              = optional(number, 300)
+      scale_out_from_zero_cooldown_secs    = optional(number, 60)
 
-# --- Endpoint / Inference Component ------------------------------------------
+      compute_resource_requirements = optional(object({
+        min_memory_required_in_mb              = optional(number, 1024)
+        max_memory_required_in_mb              = optional(number)
+        number_of_cpu_cores_required           = optional(number, 1)
+        number_of_accelerator_devices_required = optional(number)
+      }), {})
+    }))
 
-variable "endpoint_name" {
-  description = "Name of the SageMaker endpoint."
-  type        = string
-  default     = "iris-ic-endpoint"
-}
+    explainer_config = optional(object({
+      clarify_explainer_config = optional(object({
+        inference_config = optional(object({
+          feature_headers       = optional(list(string))
+          feature_attribute     = optional(string)
+          feature_types         = optional(list(string))
+          max_record_count      = optional(number)
+          max_payload_in_mb     = optional(number)
+          probability_index     = optional(number)
+          label_index           = optional(number)
+          probability_attribute = optional(string)
+          label_attribute       = optional(string)
+          content_template      = optional(string)
+        }))
+        shap_config = object({
+          shap_baseline_config = object({
+            mime_type         = optional(string)
+            shap_baseline     = optional(string)
+            shap_baseline_uri = optional(string)
+          })
+          number_of_samples = optional(number)
+          use_logit         = optional(bool)
+          seed              = optional(number)
+          text_config = optional(object({
+            language    = string # en, de, es, fr, it, pt, etc.
+            granularity = string # token, sentence, paragraph
+          }))
+        })
+      }))
+    }))
 
-variable "variant_name" {
-  description = "Name of the production variant in the endpoint configuration."
-  type        = string
-  default     = "AllTraffic"
-}
+    pos_inference = optional(object({
+      image_uri               = string
+      instance_type           = string
+      instance_count          = string
+      volume_size_in_gb       = string
+      emit_cloudwatch_metrics = optional(string, "false")
+      create_infra            = optional(bool, false)
+    }))
 
-variable "inference_component_name" {
-  description = "Name of the SageMaker inference component."
-  type        = string
-  default     = "iris-ic"
-}
-
-variable "instance_type" {
-  description = "Instance type backing the endpoint's managed-instance-scaling variant."
-  type        = string
-  default     = "ml.m5.xlarge"
-}
-
-variable "max_instance_count" {
-  description = "Maximum number of instances the endpoint's managed instance scaling can grow to."
-  type        = number
-  default     = 2
-}
-
-variable "initial_copy_count" {
-  description = "Initial DesiredCopyCount for the inference component at creation time."
-  type        = number
-  default     = 1
-}
-
-variable "min_copy_count" {
-  description = "Minimum DesiredCopyCount for application autoscaling (0 enables scale-to-zero)."
-  type        = number
-  default     = 0
-}
-
-variable "max_copy_count" {
-  description = "Maximum DesiredCopyCount for application autoscaling."
-  type        = number
-  default     = 2
-}
-
-variable "number_of_cpu_cores_required" {
-  description = "vCPU cores reserved per inference component copy."
-  type        = number
-  default     = 1
-}
-
-variable "min_memory_required_in_mb" {
-  description = "Memory (MB) reserved per inference component copy."
-  type        = number
-  default     = 1024
-}
-
-variable "scale_to_zero_target_value" {
-  description = "Target value (invocations per copy per minute) for the target-tracking autoscaling policy."
-  type        = number
-  default     = 5
-}
-
-variable "scale_in_cooldown" {
-  description = "Seconds to wait before scaling in (including down to zero) after the last scale-in."
-  type        = number
-  default     = 300
-}
-
-variable "scale_out_cooldown" {
-  description = "Seconds to wait before allowing another scale-out."
-  type        = number
-  default     = 60
-}
-
-variable "tags" {
-  description = "Common tags applied to all resources."
-  type        = map(string)
-  default     = {}
+    data_mesh = optional(object({
+      table_name          = optional(string, "")
+      spec_db_source_name = optional(string, "")
+      spec_db_corp_name   = optional(string, "")
+      spec_s3bucket       = optional(string, "")
+      pos_inference_kms   = optional(string, "")
+      match_database      = optional(map(list(string)), {})
+      expressions_columns = optional(list(object({
+        name = string
+        type = string
+      })), [])
+    }))
+  })
 }

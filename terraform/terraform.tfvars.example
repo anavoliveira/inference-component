@@ -3,18 +3,44 @@
 aws_region  = "us-east-1"
 aws_profile = "default"
 
-vpc_id              = "vpc-xxxxxxxxxxxxxxxxx"
-subnet_ids          = ["subnet-xxxxxxxxxxxxxxxxx", "subnet-yyyyyyyyyyyyyyyyy"]
-security_group_ids  = ["sg-xxxxxxxxxxxxxxxxx"]
+project_role = "itau-mlops-sagemakerstudio-user-execution-role"
+model_name   = "iris-ic"
 
-model_data_url            = "s3://my-bucket/iris/model.tar.gz"
-model_artifact_bucket_arn = "arn:aws:s3:::my-bucket"
+flavor_params = {
+  project = {
+    model_name          = "iris-ic"
+    experiment_id       = "exp-xxxxxxxx"
+    id_mrm              = "mrm-xxxxxxxx"
+    condominio          = "xxxxxxxx"
+    tech_team_email     = "team@example.com"
+    owner_contact_email = "owner@example.com"
+  }
 
-# This stack doesn't manage the image - build and push ../container/ to an
-# existing ECR repo yourself before applying, see variables.tf for the
-# exact commands, then paste the full image URI (with tag) here.
-container_image_uri = "123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repo:latest"
+  network = {
+    vpc_id     = "vpc-xxxxxxxxxxxxxxxxx"
+    subnet_ids = ["subnet-xxxxxxxxxxxxxxxxx", "subnet-yyyyyyyyyyyyyyyyy"]
+  }
 
-tags = {
-  project = "iris-ic"
+  model = {
+    model_path      = "iris-ic"
+    model_file_name = "model.tar.gz"
+    s3_bucket       = "my-bucket"
+  }
+
+  # This stack doesn't manage the image - build and push ../container/ to an
+  # existing ECR repo yourself before applying, see ../container/Dockerfile,
+  # then paste the full image URI (with tag) here.
+  image_uri = "123456789012.dkr.ecr.us-east-1.amazonaws.com/my-repo:latest"
+
+  instance_type = "ml.c6i.large"
+
+  autoscaling = {
+    min_capacity                         = 0
+    max_capacity                         = 2
+    max_requests_per_minute_per_instance = 5
+    compute_resource_requirements = {
+      number_of_cpu_cores_required = 1
+      min_memory_required_in_mb    = 1024
+    }
+  }
 }
