@@ -1,10 +1,6 @@
-resource "aws_ecr_repository" "iris_ic" {
-  name                 = "${var.project_name}-inference"
-  image_tag_mutability = "MUTABLE"
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-
-  tags = var.tags
+# References an existing ECR repository/image (managed outside this stack)
+# instead of creating one. Fails at plan time if the repo doesn't exist,
+# which is the desired signal - image build/push stays a separate workflow.
+data "aws_ecr_repository" "iris_ic" {
+  name = var.ecr_repository_name
 }
