@@ -1,10 +1,11 @@
 # Terraform
-terraform/.terraform/
-terraform/terraform.tfstate
-terraform/terraform.tfstate.backup
-terraform/tfplan
-terraform/*.tfvars
-terraform/schema.json
+**/.terraform/
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/tfplan
+**/*.tfvars
+**/schema.json
+!**/*.tfvars.example
 
 # Python / training artifacts
 train/.venv/
