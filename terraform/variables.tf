@@ -144,3 +144,33 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+# --- Encryption / data capture -----------------------------------------------
+
+variable "kms_key_id" {
+  description = <<-EOT
+    KMS key (ID, alias, or ARN) used to encrypt the endpoint's storage volume
+    and, when enabled, captured inference data. Leave null to use SageMaker's
+    default AWS-managed encryption.
+  EOT
+  type        = string
+  default     = null
+}
+
+variable "data_capture_enabled" {
+  description = "Enable SageMaker Model Monitor data capture (requests/responses) for the endpoint."
+  type        = bool
+  default     = false
+}
+
+variable "data_capture_s3_uri" {
+  description = "S3 URI captured request/response data is written to. Required when data_capture_enabled = true."
+  type        = string
+  default     = null
+}
+
+variable "data_capture_sampling_percentage" {
+  description = "Percentage of requests to capture (1-100)."
+  type        = number
+  default     = 100
+}

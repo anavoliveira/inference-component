@@ -9,6 +9,13 @@ resource "aws_sagemaker_model" "iris" {
     # (no NAT gateway). Everything is baked in at build time instead.
     image          = "${aws_ecr_repository.iris_ic.repository_url}:${var.container_image_tag}"
     model_data_url = var.model_data_url
+
+    # "Platform" (the default AWS would use anyway) pulls the image through
+    # SageMaker's own networking rather than the model's VpcConfig. Set
+    # explicitly rather than left implicit.
+    image_config {
+      repository_access_mode = "Platform"
+    }
   }
 
   vpc_config {
