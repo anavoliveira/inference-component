@@ -18,9 +18,12 @@ tags = {
   project = "iris-ic"
 }
 
-# Optional - leave commented out to use SageMaker's default AWS-managed
-# encryption and skip data capture entirely.
-# kms_key_id                       = "arn:aws:kms:us-east-1:123456789012:key/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-# data_capture_enabled             = true
-# data_capture_s3_uri              = "s3://my-bucket/iris/data-capture"
-# data_capture_sampling_percentage = 100
+# Optional. Leave kms_key_id unset to use the KMS key this stack creates
+# (kms.tf) instead of an existing one.
+# kms_key_id = "arn:aws:kms:us-east-1:123456789012:key/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# Data capture is NOT supported on endpoints with Inference Components
+# enabled - confirmed against a live account 2026-08-26. AWS rejects
+# CreateEndpointConfig with a DataCaptureConfig for these endpoints outright.
+# Left disabled; do not enable unless AWS lifts this restriction.
+data_capture_enabled = false
