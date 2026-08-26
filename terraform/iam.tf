@@ -31,6 +31,15 @@ data "aws_iam_policy_document" "model_artifact_access" {
     actions   = ["s3:GetObject"]
     resources = ["${var.model_artifact_bucket_arn}/*"]
   }
+
+  # Data capture writes request/response payloads to S3 (var.data_capture_s3_uri).
+  # Assumes it lives in the same bucket as the model artifact - true for this
+  # test setup; split into its own statement/bucket ARN if that ever changes.
+  statement {
+    sid       = "WriteDataCapture"
+    actions   = ["s3:PutObject"]
+    resources = ["${var.model_artifact_bucket_arn}/*"]
+  }
 }
 
 resource "aws_iam_role_policy" "model_artifact_access" {
