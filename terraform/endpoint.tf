@@ -14,6 +14,7 @@ locals {
     tostring(var.data_capture_enabled),
     var.data_capture_s3_uri != null ? var.data_capture_s3_uri : "",
     tostring(var.data_capture_sampling_percentage),
+    tostring(var.network_isolation_enabled),
   ])), 0, 8)
   endpoint_config_name = "${var.project_name}-endpoint-config-${local.endpoint_config_suffix}"
 }
@@ -26,11 +27,12 @@ locals {
 # created directly via the AWS CLI and tracked with terraform_data.
 resource "terraform_data" "endpoint_config" {
   input = {
-    name     = local.endpoint_config_name
-    region   = var.aws_region
-    profile  = var.aws_profile
-    role_arn = aws_iam_role.sagemaker_execution.arn
-    kms_key  = local.kms_key_arn
+    name              = local.endpoint_config_name
+    region            = var.aws_region
+    profile           = var.aws_profile
+    role_arn          = aws_iam_role.sagemaker_execution.arn
+    kms_key           = local.kms_key_arn
+    network_isolation = tostring(var.network_isolation_enabled)
   }
 
   triggers_replace = [
@@ -98,6 +100,7 @@ resource "terraform_data" "endpoint_config" {
 
       $extraArgs = @()
       if ("${self.input.kms_key}") { $extraArgs += @("--kms-key-id", "${self.input.kms_key}") }
+      if ("${self.input.network_isolation}" -eq "true") { $extraArgs += @("--enable-network-isolation") }
 
       $dcTmp = $null
       if ($env:DATA_CAPTURE_CONFIG_JSON) {

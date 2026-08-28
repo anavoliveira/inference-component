@@ -16,13 +16,15 @@ locals {
     var.container_image_tag,
     var.model_data_url,
     "no_image_config",
+    tostring(var.network_isolation_enabled),
   ])), 0, 8)
   model_name = "${var.project_name}-model-${local.model_name_suffix}"
 }
 
 resource "aws_sagemaker_model" "iris" {
-  name               = local.model_name
-  execution_role_arn = aws_iam_role.sagemaker_execution.arn
+  name                     = local.model_name
+  execution_role_arn       = aws_iam_role.sagemaker_execution.arn
+  enable_network_isolation = var.network_isolation_enabled
 
   primary_container {
     # Custom image (not an AWS-managed framework container) - see ecr.tf. Avoids

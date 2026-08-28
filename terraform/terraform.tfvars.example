@@ -27,3 +27,13 @@ tags = {
 # CreateEndpointConfig with a DataCaptureConfig for these endpoints outright.
 # Left disabled; do not enable unless AWS lifts this restriction.
 data_capture_enabled = false
+
+# Optional. Unlike repository_access_mode and data_capture, this IS
+# compatible with Inference Components - confirmed against a live account
+# 2026-08-28. Just note that updating an EXISTING endpoint to flip this needs
+# the endpoint's UpdateEndpoint to finish (reach InService on the new config)
+# BEFORE updating the inference component's model, or you'll hit "Model and
+# endpoint config have different network isolation configurations" even
+# though both sides are configured consistently - it's a timing issue, not a
+# rejection.
+network_isolation_enabled = false

@@ -174,3 +174,15 @@ variable "data_capture_sampling_percentage" {
   type        = number
   default     = 100
 }
+
+variable "network_isolation_enabled" {
+  description = <<-EOT
+    Blocks all inbound/outbound network calls to/from the model container.
+    Must be set consistently on both the model (aws_sagemaker_model) and the
+    endpoint config ("Model and endpoint config have different network
+    isolation configurations" otherwise) - both are driven by this single
+    variable so they can't drift apart.
+  EOT
+  type        = bool
+  default     = false
+}
